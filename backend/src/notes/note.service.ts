@@ -7,11 +7,17 @@ import { PermissionLevel } from '@hedgedoc/commons';
 import {
   FieldNameAlias,
   FieldNameNote,
+  FieldNameNoteGroupPermission,
+  FieldNameNoteUserPermission,
   FieldNameRevision,
+  FieldNameUserPinnedNote,
   FieldNameVisitedNote,
   Note,
   TableAlias,
   TableNote,
+  TableNoteGroupPermission,
+  TableNoteUserPermission,
+  TableUserPinnedNote,
   TableVisitedNote,
 } from '@hedgedoc/database';
 import { SpecialGroup } from '@hedgedoc/database';
@@ -42,6 +48,13 @@ import {
   dbToDateTime,
   getCurrentDateTime,
 } from '../utils/datetime';
+
+export enum NoteScope {
+  MY = 'my',
+  SHARED = 'shared',
+  PUBLIC = 'public',
+  PINNED = 'pinned',
+}
 
 @Injectable()
 export class NoteService {
@@ -75,6 +88,47 @@ export class NoteService {
       .select(FieldNameNote.id)
       .where(FieldNameNote.ownerId, userId);
     return result.map((row) => row[FieldNameNote.id]);
+  }
+
+  async getSharedNoteIds(userId: number): Promise<number[]> {
+    const result = await this.knex(TableNoteUserPermission)
+      .select(FieldNameNoteUserPermission.noteId)
+      .where(FieldNameNoteUserPermission.userId, userId);
+    return result.map((row) => row[FieldNameNoteUserPermission.noteId]);
+  }
+
+  async getPublicNoteIds(): Promise<number[]> {
+    const everyoneGroupId = await this.groupsService.getGroupIdByName(SpecialGroup.EVERYONE);
+    const result = await this.knex(TableNote)
+      .join(
+        TableNoteGroupPermission,
+        `${TableNote}.${FieldNameNote.id}`,
+        `${TableNoteGroupPermission}.${FieldNameNoteGroupPermission.noteId}`,
+      )
+      .select(`${TableNote}.${FieldNameNote.id}`)
+      .where(`${TableNoteGroupPermission}.${FieldNameNoteGroupPermission.groupId}`, everyoneGroupId)
+      .andWhere(`${TableNote}.${FieldNameNote.publiclyVisible}`, true);
+    return result.map((row) => row[FieldNameNote.id]);
+  }
+
+  async getPinnedNoteIds(userId: number): Promise<number[]> {
+    const result = await this.knex(TableUserPinnedNote)
+      .select(FieldNameUserPinnedNote.noteId)
+      .where(FieldNameUserPinnedNote.userId, userId);
+    return result.map((row) => row[FieldNameUserPinnedNote.noteId]);
+  }
+
+  async getNoteIdsByScope(scope: NoteScope, userId: number): Promise<number[]> {
+    switch (scope) {
+      case NoteScope.MY:
+        return this.getUserNoteIds(userId);
+      case NoteScope.SHARED:
+        return this.getSharedNoteIds(userId);
+      case NoteScope.PUBLIC:
+        return this.getPublicNoteIds();
+      case NoteScope.PINNED:
+        return this.getPinnedNoteIds(userId);
+    }
   }
 
   /**

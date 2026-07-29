@@ -10,7 +10,7 @@ import {
   NoteMetadataSchema,
 } from '@hedgedoc/commons';
 import { User } from '@hedgedoc/database';
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 
 import { LoginUserInfoDto } from '../../../dtos/login-user-info.dto';
@@ -18,7 +18,7 @@ import { MediaUploadDto } from '../../../dtos/media-upload.dto';
 import { NoteMetadataDto } from '../../../dtos/note-metadata.dto';
 import { ConsoleLoggerService } from '../../../logger/console-logger.service';
 import { MediaService } from '../../../media/media.service';
-import { NoteService } from '../../../notes/note.service';
+import { NoteScope, NoteService } from '../../../notes/note.service';
 import { UsersService } from '../../../users/users.service';
 import { OpenApi } from '../../utils/decorators/openapi.decorator';
 import { RequestUserId } from '../../utils/decorators/request-user-id.decorator';
@@ -53,12 +53,18 @@ export class MeController {
   @Get('notes')
   @OpenApi({
     code: 200,
-    description: 'Metadata of all notes of the user',
+    description: 'Metadata of notes accessible to the user. Scope: my (owned), shared (shared with user), public (public notes), pinned (pinned by user). Default: my.',
     isArray: true,
     schema: NoteMetadataSchema,
   })
-  async getMyNotes(@RequestUserId() userId: number): Promise<NoteMetadataDto[]> {
-    const noteIds = await this.notesService.getUserNoteIds(userId);
+  async getMyNotes(
+    @RequestUserId() userId: number,
+    @Query('scope') scope: string = 'my',
+  ): Promise<NoteMetadataDto[]> {
+    if (!Object.values(NoteScope).includes(scope as NoteScope)) {
+      throw new BadRequestException(`Invalid scope: ${scope}. Must be one of: ${Object.values(NoteScope).join(', ')}`);
+    }
+    const noteIds = await this.notesService.getNoteIdsByScope(scope as NoteScope, userId);
     return await Promise.all(noteIds.map((note) => this.notesService.toNoteMetadataDto(note)));
   }
 
