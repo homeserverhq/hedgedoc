@@ -332,7 +332,7 @@ export class RevisionsService {
     newContent: string,
     firstRevision: boolean = false,
     transaction?: Knex,
-    yjsStateVector?: ArrayBuffer,
+    yjsStateVector?: Buffer,
   ): Promise<void> {
     this.logger.debug(`Creating revision for note '${noteId}'`, 'createRevision');
     if (!transaction) {
@@ -365,7 +365,7 @@ export class RevisionsService {
     newContent: string,
     firstRevision: boolean,
     transaction: Knex,
-    yjsStateVector?: ArrayBuffer,
+    yjsStateVector?: Buffer,
   ): Promise<void> {
     const latestRevision = firstRevision ? null : await this.getLatestRevision(noteId, transaction);
     const oldContent = latestRevision?.content;
