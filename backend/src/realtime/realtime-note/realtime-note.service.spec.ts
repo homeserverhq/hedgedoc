@@ -23,7 +23,7 @@ import { MockConnectionBuilder } from './test-utils/mock-connection';
 describe('RealtimeNoteService', () => {
   const mockedContent = 'mockedContent';
   const mockedYjsState = [1, 2, 3];
-  const mockedYjsStateBuffer = new Uint8Array(mockedYjsState).buffer;
+  const mockedYjsStateBuffer = Buffer.from(mockedYjsState);
   const mockedNoteId = 4711;
 
   let realtimeNote: RealtimeNote;
