@@ -5,7 +5,8 @@
  */
 import { DeleteApiRequestBuilder } from '../common/api-request-builder/delete-api-request-builder'
 import { GetApiRequestBuilder } from '../common/api-request-builder/get-api-request-builder'
-import type { RevisionInterface, RevisionMetadataInterface } from '@hedgedoc/commons'
+import { PutApiRequestBuilder } from '../common/api-request-builder/put-api-request-builder'
+import type { NoteInterface, RevisionInterface, RevisionMetadataInterface } from '@hedgedoc/commons'
 
 /**
  * Retrieves a note revision while using a cache for often retrieved revisions.
@@ -44,4 +45,19 @@ export const getAllRevisions = async (noteId: string): Promise<RevisionMetadataI
  */
 export const deleteRevisionsForNote = async (noteAlias: string): Promise<void> => {
   await new DeleteApiRequestBuilder(`notes/${noteAlias}/revisions`).sendRequest()
+}
+
+/**
+ * Reverts a note to the content of a specific revision by creating a new revision with that content.
+ *
+ * @param noteAlias The id or alias of the note to revert.
+ * @param revisionUuid The uuid of the revision to revert to.
+ * @return The updated note.
+ * @throws {Error} when the api request wasn't successful.
+ */
+export const revertToRevision = async (noteAlias: string, revisionUuid: string): Promise<NoteInterface> => {
+  const response = await new PutApiRequestBuilder<NoteInterface, void>(
+    `notes/${noteAlias}/revisions/${revisionUuid}/revert`
+  ).sendRequest()
+  return response.asParsedJsonObject()
 }

@@ -183,6 +183,20 @@ export class NotesController {
     return await this.revisionsService.getRevisionDto(revisionUuid, noteId);
   }
 
+  @Put(':noteAlias/revisions/:revisionUuid/revert')
+  @OpenApi(200, 404)
+  @RequirePermission(PermissionLevel.WRITE)
+  @UseInterceptors(GetNoteIdInterceptor)
+  async revertToRevision(
+    @RequestUserId() _userId: number,
+    @RequestNoteId() noteId: number,
+    @Param('revisionUuid') revisionUuid: string,
+  ): Promise<NoteDto> {
+    const revision = await this.revisionsService.getRevisionDto(revisionUuid, noteId);
+    await this.noteService.updateNote(noteId, revision.content);
+    return await this.noteService.toNoteDto(noteId);
+  }
+
   @Put(':noteAlias/metadata/permissions/users/:username')
   @OpenApi(200, 404)
   @UseInterceptors(GetNoteIdInterceptor)

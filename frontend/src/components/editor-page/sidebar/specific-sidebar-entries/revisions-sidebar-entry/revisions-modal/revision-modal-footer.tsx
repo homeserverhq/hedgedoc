@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
-import { getRevision } from '../../../../../../api/revisions'
+import { getRevision, revertToRevision } from '../../../../../../api/revisions'
 import { useApplicationState } from '../../../../../../hooks/common/use-application-state'
 import { cypressId } from '../../../../../../utils/cypress-attribute'
 import type { ModalVisibilityProps } from '../../../../../common/modals/common-modal'
@@ -40,6 +40,17 @@ export const RevisionModalFooter: React.FC<RevisionModalFooterProps> = ({
   const noteAlias = useApplicationState((state) => state.noteDetails?.primaryAlias)
   const { showErrorNotificationBuilder } = useUiNotifications()
 
+  const onRevertToRevision = useCallback(() => {
+    if (selectedRevisionId === undefined || noteAlias === undefined) {
+      return
+    }
+    revertToRevision(noteAlias, selectedRevisionId)
+      .then(() => {
+        window.location.reload()
+      })
+      .catch(showErrorNotificationBuilder(''))
+  }, [noteAlias, selectedRevisionId, onHide, showErrorNotificationBuilder])
+
   const onDownloadRevision = useCallback(() => {
     if (selectedRevisionId === undefined || noteAlias === undefined) {
       return
@@ -67,6 +78,13 @@ export const RevisionModalFooter: React.FC<RevisionModalFooterProps> = ({
         {...cypressId('revision.modal.delete.button')}
         disabled={disableDeleteRevisions}>
         <Trans i18nKey={'editor.modal.deleteRevision.button'} />
+      </Button>
+      <Button
+        variant='danger'
+        disabled={selectedRevisionId === undefined}
+        onClick={onRevertToRevision}
+        {...cypressId('revision.modal.revert.button')}>
+        <Trans i18nKey={'editor.modal.revision.revertButton'} />
       </Button>
       <Button
         variant='primary'

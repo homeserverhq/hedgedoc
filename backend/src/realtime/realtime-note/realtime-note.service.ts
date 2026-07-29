@@ -82,11 +82,24 @@ export class RealtimeNoteService implements BeforeApplicationShutdown {
    */
   private async createNewRealtimeNote(noteId: number): Promise<RealtimeNote> {
     const lastRevision = await this.revisionsService.getLatestRevision(noteId);
-    const realtimeNote = this.realtimeNoteStore.create(
-      noteId,
-      lastRevision[FieldNameRevision.content],
-      lastRevision[FieldNameRevision.yjsStateVector]?.buffer ?? undefined,
-    );
+    let realtimeNote: RealtimeNote;
+    try {
+      realtimeNote = this.realtimeNoteStore.create(
+        noteId,
+        lastRevision[FieldNameRevision.content],
+        lastRevision[FieldNameRevision.yjsStateVector] ?? undefined,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to restore Yjs state for note ${noteId}, falling back to text content: ${(error as Error).message}`,
+        'createNewRealtimeNote',
+      );
+      realtimeNote = this.realtimeNoteStore.create(
+        noteId,
+        lastRevision[FieldNameRevision.content],
+        undefined,
+      );
+    }
     realtimeNote.on('beforeDestroy', () => {
       this.saveRealtimeNote(realtimeNote);
     });

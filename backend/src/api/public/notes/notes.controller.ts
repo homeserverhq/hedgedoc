@@ -370,6 +370,27 @@ export class NotesController {
   }
 
   @UseInterceptors(GetNoteIdInterceptor)
+  @RequirePermission(PermissionLevel.WRITE)
+  @Put(':noteAlias/revisions/:revisionUuid/revert')
+  @OpenApi(
+    {
+      code: 200,
+      description: 'The note reverted to the given revision',
+      schema: NoteSchema,
+    },
+    404,
+  )
+  async revertToRevision(
+    @RequestUserId() _userId: number,
+    @RequestNoteId() noteId: number,
+    @Param('revisionUuid') revisionUuid: string,
+  ): Promise<NoteDto> {
+    const revision = await this.revisionsService.getRevisionDto(revisionUuid, noteId);
+    await this.noteService.updateNote(noteId, revision.content);
+    return await this.noteService.toNoteDto(noteId);
+  }
+
+  @UseInterceptors(GetNoteIdInterceptor)
   @RequirePermission(PermissionLevel.READ)
   @Get(':noteAlias/media')
   @OpenApi({
