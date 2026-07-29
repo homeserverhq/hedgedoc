@@ -121,13 +121,13 @@ export class NoteService {
   async getNoteIdsByScope(scope: NoteScope, userId: number): Promise<number[]> {
     switch (scope) {
       case NoteScope.MY:
-        return this.getUserNoteIds(userId);
+        return await this.getUserNoteIds(userId);
       case NoteScope.SHARED:
-        return this.getSharedNoteIds(userId);
+        return await this.getSharedNoteIds(userId);
       case NoteScope.PUBLIC:
-        return this.getPublicNoteIds();
+        return await this.getPublicNoteIds();
       case NoteScope.PINNED:
-        return this.getPinnedNoteIds(userId);
+        return await this.getPinnedNoteIds(userId);
     }
   }
 
