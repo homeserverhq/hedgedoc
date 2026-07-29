@@ -49,7 +49,7 @@ export const RevisionModalFooter: React.FC<RevisionModalFooterProps> = ({
         window.location.reload()
       })
       .catch(showErrorNotificationBuilder(''))
-  }, [noteAlias, selectedRevisionId, onHide, showErrorNotificationBuilder])
+  }, [noteAlias, selectedRevisionId, showErrorNotificationBuilder])
 
   const onDownloadRevision = useCallback(() => {
     if (selectedRevisionId === undefined || noteAlias === undefined) {

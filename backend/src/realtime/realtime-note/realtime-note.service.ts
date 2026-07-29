@@ -46,14 +46,13 @@ export class RealtimeNoteService implements BeforeApplicationShutdown {
    */
   public saveRealtimeNote(realtimeNote: RealtimeNote): void {
     const encodedStateUpdate = realtimeNote.getRealtimeDoc().encodeStateAsUpdate();
-    const encodedStateUpdateBytes = new Uint8Array(encodedStateUpdate);
     this.revisionsService
       .createRevision(
         realtimeNote.getNoteId(),
         realtimeNote.getRealtimeDoc().getCurrentContent(),
         false,
         undefined,
-        encodedStateUpdateBytes.buffer,
+        Buffer.from(encodedStateUpdate),
       )
       .then(() => {
         realtimeNote.announceMetadataUpdate();
