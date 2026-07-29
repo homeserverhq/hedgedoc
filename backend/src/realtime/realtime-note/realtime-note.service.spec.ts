@@ -307,7 +307,7 @@ describe('RealtimeNoteService', () => {
       mockedContent,
       false, // this cannot be an initial revision, since this is created during note creation
       undefined, // the test doesn't use knex transactions
-      mockedYjsStateBuffer,
+      Buffer.from(realtimeNote.getRealtimeDoc().encodeStateAsUpdate()),
     );
   });
 
